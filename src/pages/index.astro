@@ -1,16 +1,59 @@
 ---
-// Placeholder page so the project builds and the end-to-end sample test has a page to open.
-// SWWCF-2 replaces it with the real home page.
+// The home page: a title, a short welcome text and a link to the contact form.
 ---
 
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>contact-form-check-2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Welcome | contact-form-check-2</title>
   </head>
   <body>
-    <h1>contact-form-check-2</h1>
-    <p>The site is being built.</p>
+    <main>
+      <h1>Welcome to contact-form-check-2</h1>
+      <p>
+        This is a simple website where you can get in touch with us. Use the contact form to send us
+        a message and we will read it.
+      </p>
+      <a class="button" href="/contact">
+        Contact
+      </a>
+    </main>
   </body>
 </html>
+
+<style>
+  body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    line-height: 1.5;
+    color: #1a1a1a;
+    background: #f6f7f9;
+  }
+  main {
+    box-sizing: border-box;
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+  h1 {
+    font-size: clamp(1.75rem, 6vw, 3rem);
+    line-height: 1.2;
+    overflow-wrap: break-word;
+  }
+  .button {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    background: #1d4ed8;
+    color: #fff;
+    font-size: 1.125rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .button:hover,
+  .button:focus-visible {
+    background: #1e3a8a;
+  }
+</style>
