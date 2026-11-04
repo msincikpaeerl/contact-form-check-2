@@ -16,6 +16,10 @@ Install [Node.js](https://nodejs.org/) version 24 or newer.
 
 Stop the site with Ctrl+C.
 
+## The home page
+
+Opening <http://localhost:4321> shows the home page: a title, a short welcome text and a blue **Contact** button. The button leads to the contact form at `/contact`. The page adapts to phone and desktop screens.
+
 ## Where messages are saved
 
 Messages sent through the contact form are saved in the `data` folder of the project, on the computer running the site. The form itself is not available yet.
