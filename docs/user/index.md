@@ -5,3 +5,4 @@ A simple website with a home page and a contact form. Messages sent through the 
 This guide explains how to use contact-form-check-2, organised by tasks. It is written for someone who never reads the code.
 
 - [Getting started](getting-started.md)
+- [Using the contact form](contact-form.md)
