@@ -9,20 +9,32 @@ export interface StoredMessage {
   message: string;
 }
 
-export type ValidationResult =
-  { ok: true; value: Omit<StoredMessage, 'receivedAt'> } | { ok: false; errors: string[] };
+export type FieldName = 'name' | 'email' | 'message';
 
-/** Checks the fields of a submitted form. Placeholder rules: SWWCF-3 defines the real ones. */
+/** One error message per faulty field. */
+export type FieldErrors = Partial<Record<FieldName, string>>;
+
+export type ValidationResult =
+  { ok: true; value: Omit<StoredMessage, 'receivedAt'> } | { ok: false; errors: FieldErrors };
+
+/** Where the site keeps the saved messages, relative to the folder the site is started from. */
+export const MESSAGES_FILE = 'data/messages.jsonl';
+
+/** Checks the fields of a submitted form: none may be empty, and the e-mail address must be valid. */
 export function validateSubmission(form: FormData): ValidationResult {
   const read = (key: string) => String(form.get(key) ?? '').trim();
   const name = read('name');
   const email = read('email');
   const message = read('message');
-  const errors: string[] = [];
-  if (!name) errors.push('name is required');
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) errors.push('email is not valid');
-  if (!message) errors.push('message is required');
-  return errors.length > 0 ? { ok: false, errors } : { ok: true, value: { name, email, message } };
+  const errors: FieldErrors = {};
+  if (!name) errors.name = 'Please enter your name.';
+  if (!email) errors.email = 'Please enter your e-mail address.';
+  else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
+    errors.email = 'Please enter a valid e-mail address.';
+  if (!message) errors.message = 'Please enter a message.';
+  return Object.keys(errors).length > 0
+    ? { ok: false, errors }
+    : { ok: true, value: { name, email, message } };
 }
 
 /** Appends one message, as one JSON line, to a file on this computer. Creates the folder if needed. */

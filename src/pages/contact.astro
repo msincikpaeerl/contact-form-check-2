@@ -1,0 +1,143 @@
+---
+// The contact page. It runs on the server: it shows the form, checks a submitted form again
+// (the browser check can be bypassed) and saves valid messages to a file. No e-mail is sent.
+import { appendMessage, MESSAGES_FILE, validateSubmission } from '../lib/submission';
+import type { FieldErrors } from '../lib/submission';
+
+export const prerender = false;
+
+let errors: FieldErrors = {};
+let values = { name: '', email: '', message: '' };
+const sent = Astro.url.searchParams.get('sent') === '1';
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const result = validateSubmission(form);
+  if (result.ok) {
+    await appendMessage(MESSAGES_FILE, { receivedAt: new Date().toISOString(), ...result.value });
+    return Astro.redirect('/contact?sent=1', 303);
+  }
+  errors = result.errors;
+  const read = (key: string) => String(form.get(key) ?? '');
+  values = { name: read('name'), email: read('email'), message: read('message') };
+  Astro.response.status = 400;
+}
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Contact – contact-form-check-2</title>
+  </head>
+  <body>
+    <h1>Contact</h1>
+    {sent && (
+      <p role="status" id="confirmation">
+        Thank you! Your message was received.
+      </p>
+    )}
+    <form method="post" action="/contact" id="contact-form">
+      <p>
+        <label for="name">Name</label>
+        <br />
+        <input
+          type="text"
+          id="name"
+          name="name"
+          required
+          value={values.name}
+          aria-describedby="name-error"
+        />
+        <span id="name-error" class="error" role="alert">
+          {errors.name}
+        </span>
+      </p>
+      <p>
+        <label for="email">E-mail address</label>
+        <br />
+        <input
+          type="email"
+          id="email"
+          name="email"
+          required
+          value={values.email}
+          aria-describedby="email-error"
+        />
+        <span id="email-error" class="error" role="alert">
+          {errors.email}
+        </span>
+      </p>
+      <p>
+        <label for="message">Message</label>
+        <br />
+        <textarea
+          id="message"
+          name="message"
+          rows="6"
+          required
+          aria-describedby="message-error"
+        >{values.message}</textarea>
+        <span id="message-error" class="error" role="alert">
+          {errors.message}
+        </span>
+      </p>
+      <p>
+        <button type="submit">Send</button>
+      </p>
+    </form>
+
+    <style>
+      .error {
+        color: #b00020;
+        display: block;
+      }
+    </style>
+
+    <script>
+      // Checks each field in the browser and shows the message next to the faulty field.
+      const form = document.getElementById('contact-form') as HTMLFormElement;
+      const messages: Record<string, { empty: string; invalid?: string }> = {
+        name: { empty: 'Please enter your name.' },
+        email: {
+          empty: 'Please enter your e-mail address.',
+          invalid: 'Please enter a valid e-mail address.',
+        },
+        message: { empty: 'Please enter a message.' },
+      };
+      const fields = Array.from(form.elements).filter(
+        (el): el is HTMLInputElement | HTMLTextAreaElement =>
+          el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement,
+      );
+
+      function check(field: HTMLInputElement | HTMLTextAreaElement): boolean {
+        const text = messages[field.name];
+        const target = document.getElementById(`${field.name}-error`);
+        if (!text || !target) return true;
+        const empty = field.value.trim() === '';
+        const invalid = !empty && !field.validity.valid;
+        const error = empty ? text.empty : invalid ? (text.invalid ?? '') : '';
+        target.textContent = error;
+        return error === '';
+      }
+
+      form.addEventListener('submit', (event) => {
+        const results = fields.map(check);
+        if (results.includes(false)) event.preventDefault();
+      });
+      // Stops the browser's own pop-up bubble: the message is shown next to the field instead.
+      // The browser fires "invalid" instead of "submit" when a field fails its own check.
+      form.addEventListener(
+        'invalid',
+        (event) => {
+          event.preventDefault();
+          const field = event.target;
+          if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) {
+            check(field);
+          }
+        },
+        true,
+      );
+    </script>
+  </body>
+</html>
