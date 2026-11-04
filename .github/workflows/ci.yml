@@ -9,6 +9,46 @@ permissions:
   contents: read
 
 jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24.21.0
+          cache: npm
+
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Format check
+        run: npm run format:check
+      - name: Type check
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+
+  e2e:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24.21.0
+          cache: npm
+
+      - run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: End-to-end tests
+        run: npm run test:e2e
+
   docs-links:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -18,17 +58,18 @@ jobs:
       - uses: actions/setup-node@v7.0.0
         with:
           node-version: 24.21.0
+          cache: npm
 
-      # Same command as in CLAUDE.md: pinned versions, installed without a package.json into
-      # node_modules (ignored by Git). The check itself runs offline.
+      - run: npm ci
+      # Same command as in CLAUDE.md.
       - name: Check documentation links
-        run: npm install --no-save --no-package-lock remark-cli@12.0.1 remark-validate-links@13.1.0 && npx remark . --frail --quiet --no-stdout
+        run: npm run docs:links
 
   # Branch protection requires this job only, by its name: never rename or remove it. List every
   # other job in its needs; it fails when any of them failed, was cancelled or was skipped.
   ci:
     if: always()
-    needs: [docs-links]
+    needs: [checks, e2e, docs-links]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
